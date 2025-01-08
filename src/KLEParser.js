@@ -15,19 +15,23 @@ export function parseKle(kleText) {
     let kleData = null
 
     try {
-        kleData = json5.parse(kleText)
-        console.log("Parsed KLE data as json5: no-bracket (likely from downloaded JSON file")
+        kleData = json5.parse(`[${kleText}]`);
     } catch (error) {
-        console.log("No-bracket was unparseable, trying with brackets added")
+        console.log("data was unparseable, giving up");
+        return null;
+    }
 
-        try {
-            kleData = json5.parse('[' + kleText + ']')
-            console.log("Parsed KLE data as json5: with-bracket (likely pasted from the Raw Data tab)")
-        } catch (error) {
-            console.log("No-bracket was unparseable, giving up")
-            return null
+    // We parse with bracket added, then determine if they were necessary by
+    // seeing how nested the first switch is in.
+    if (kleData.length === 1) {
+        const firstRow = kleData[0];
+        if (firstRow.length > 0) {
+            // "raw" KLE data only has 1 array to represent the row, everything inside that is a flag object or a key string.
+            // So if we see an array here, then we know the provided data was a downloaded JSON file, and we need to extract its row data.
+            if (Array.isArray(firstRow[0])) {
+                kleData = firstRow;
+            }
         }
-
     }
 
 

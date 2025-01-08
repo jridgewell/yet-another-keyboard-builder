@@ -25,7 +25,7 @@ import { AcousticMXExtreme } from './cutouts/AcousticMXExtreme'
 export function buildPlate(keysArray, generatorOptions) {
 
 
-    let canvas = { models: {} }
+    let cutouts = [];
     let id = 0
 
     let minX = new Decimal(Number.POSITIVE_INFINITY)
@@ -124,14 +124,14 @@ export function buildPlate(keysArray, generatorOptions) {
         // Render switch
         let switchCutout = makerjs.model.rotate(switchGenerator.generate(key, generatorOptions), key.angle.plus(key.independentSwitchAngle).times(-1).toNumber())
         switchCutout.origin = originNum
-        canvas.models["Switch" + id.toString()] = switchCutout
+        cutouts.push(switchCutout)
 
         // Render stabilizer
         let stabilizerCutout = stabilizerGenerator.generate(key, generatorOptions)
         if (stabilizerCutout) {
             stabilizerCutout.origin = originNum
             stabilizerCutout = makerjs.model.rotate(stabilizerCutout, key.angle.plus(key.stabilizerAngle).times(-1).toNumber(), originNum)
-            canvas.models["Stabilizer" + id.toString()] = stabilizerCutout
+            cutouts.push(stabilizerCutout)
         }
 
         // Render acoustic cutouts
@@ -139,7 +139,7 @@ export function buildPlate(keysArray, generatorOptions) {
         if (acousticCutout) {
             acousticCutout.origin = originNum
             acousticCutout = makerjs.model.rotate(acousticCutout, key.angle.plus(key.stabilizerAngle).times(-1).toNumber(), originNum)
-            canvas.models["Acoustic" + id.toString()] = acousticCutout
+            cutouts.push(acousticCutout)
         }
 
         // TODO: Render acoustic cutouts
@@ -173,7 +173,7 @@ export function buildPlate(keysArray, generatorOptions) {
     let lowerLeft = [minX.toNumber(), minY.times(-1).toNumber()]
     let lowerRight = [maxX.toNumber(), minY.times(-1).toNumber()]
 
-    var boundingBox = {
+    let boundingBox = {
         paths: {
             lineTop: new makerjs.paths.Line(upperLeft, upperRight),
             lineBottom: new makerjs.paths.Line(lowerLeft, lowerRight),
@@ -181,9 +181,10 @@ export function buildPlate(keysArray, generatorOptions) {
             lineRight: new makerjs.paths.Line(upperRight, lowerRight)
         }
     }
+    for (const cutout of cutouts) {
+        boundingBox = makerjs.model.combineSubtraction(boundingBox, cutout);
+    }
 
-    canvas.models["BoundingBox0"] = boundingBox
-
-    return canvas
+    return { models: { boundingBox } }
 
 }
