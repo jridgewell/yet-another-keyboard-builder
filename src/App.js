@@ -27,6 +27,7 @@ function App() {
   const [unitWidth, setUnitWidth] = useState(19.05)
   const [unitHeight, setUnitHeight] = useState(19.05)
   const [kerf, setKerf] = useState(0)
+  const [combineCutouts, setCombineCutouts] = useState(false)
 
   useEffect(() => {
 
@@ -44,6 +45,7 @@ function App() {
           unitWidth: new Decimal(unitWidth),
           unitHeight: new Decimal(unitHeight),
           kerf: new Decimal(kerf),
+          combineCutouts: combineCutouts,
         })
 
         const previewSvgData = makerjs.exporter.toSVG(plateData, { stroke: 'white', strokeWidth: '0.5mm', svgAttrs: { width: '100%', height: '100%' } })
@@ -76,7 +78,8 @@ function App() {
     acousticRadius,
     unitWidth,
     unitHeight,
-    kerf
+    kerf,
+    combineCutouts
   ])
 
 
@@ -175,6 +178,15 @@ function App() {
                   <option value="none">None</option>
                   <option value="mx-basic">Cherry MX Basic</option>
                   <option value="mx-extreme">Cherry MX Extreme</option>
+                </Form.Select>
+                <Form.Label>Combine Overlapping Cutouts?</Form.Label>
+                <Form.Select
+                  selected="no"
+                  className="mb-4"
+                  onChange={e => setCombineCutouts(e.target.value === 'yes')}
+                >
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
                 </Form.Select>
               </Form>
             </Col>

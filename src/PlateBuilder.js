@@ -25,7 +25,7 @@ import { AcousticMXExtreme } from './cutouts/AcousticMXExtreme'
 export function buildPlate(keysArray, generatorOptions) {
 
 
-    let cutouts = [];
+    let models = {};
     let id = 0
 
     let minX = new Decimal(Number.POSITIVE_INFINITY)
@@ -124,14 +124,14 @@ export function buildPlate(keysArray, generatorOptions) {
         // Render switch
         let switchCutout = makerjs.model.rotate(switchGenerator.generate(key, generatorOptions), key.angle.plus(key.independentSwitchAngle).times(-1).toNumber())
         switchCutout.origin = originNum
-        cutouts.push(switchCutout)
+        models["Switch" + id.toString()] = switchCutout
 
         // Render stabilizer
         let stabilizerCutout = stabilizerGenerator.generate(key, generatorOptions)
         if (stabilizerCutout) {
             stabilizerCutout.origin = originNum
             stabilizerCutout = makerjs.model.rotate(stabilizerCutout, key.angle.plus(key.stabilizerAngle).times(-1).toNumber(), originNum)
-            cutouts.push(stabilizerCutout)
+            models["Stabilizer" + id.toString()] = stabilizerCutout
         }
 
         // Render acoustic cutouts
@@ -139,7 +139,7 @@ export function buildPlate(keysArray, generatorOptions) {
         if (acousticCutout) {
             acousticCutout.origin = originNum
             acousticCutout = makerjs.model.rotate(acousticCutout, key.angle.plus(key.stabilizerAngle).times(-1).toNumber(), originNum)
-            cutouts.push(acousticCutout)
+            models["Acoustic" + id.toString()] = acousticCutout
         }
 
         // TODO: Render acoustic cutouts
@@ -181,10 +181,16 @@ export function buildPlate(keysArray, generatorOptions) {
             lineRight: new makerjs.paths.Line(upperRight, lowerRight)
         }
     }
-    for (const cutout of cutouts) {
-        boundingBox = makerjs.model.combineSubtraction(boundingBox, cutout);
+
+    if (generatorOptions.combineCutouts) {
+        for (let name in models) {
+            const cutout = models[name];
+            boundingBox = makerjs.model.combineSubtraction(boundingBox, cutout);
+        }
+        models = { cutout: boundingBox };
+    } else {
+        models["BoundingBox0"] = boundingBox
     }
 
-    return { models: { boundingBox } }
-
+    return { models }
 }
